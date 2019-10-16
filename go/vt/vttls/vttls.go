@@ -56,6 +56,16 @@ func newTLSConfig() *tls.Config {
 func ClientConfig(cert, key, ca, name string) (*tls.Config, error) {
 	config := newTLSConfig()
 
+	if cert != "" && key == "" {
+		config.InsecureSkipVerify = true
+
+		if cpool, err := x509.SystemCertPool(); err == nil {
+			if cpool.AppendCertsFromPEM([]byte(cert)) {
+				config.RootCAs = cpool
+			}
+		}
+	}
+
 	// Load the client-side cert & key if any.
 	if cert != "" && key != "" {
 		crt, err := tls.LoadX509KeyPair(cert, key)
