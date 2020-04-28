@@ -183,6 +183,7 @@ type (
 
 		// The following fields are set if a DDL was fully analyzed.
 		IfExists      bool
+		IfNotExists   bool
 		TableSpec     *TableSpec
 		OptLike       *OptLike
 		PartitionSpec *PartitionSpec
@@ -940,12 +941,16 @@ func (node *DBDDL) Format(buf *TrackedBuffer) {
 func (node *DDL) Format(buf *TrackedBuffer) {
 	switch node.Action {
 	case CreateStr:
+		notExists := ""
+		if node.Action == "create" && node.IfNotExists {
+			notExists = " if not exists"
+		}
 		if node.OptLike != nil {
-			buf.astPrintf(node, "%s table %v %v", node.Action, node.Table, node.OptLike)
+			buf.astPrintf(node, "%s table%s %v %v", node.Action, notExists, node.Table, node.OptLike)
 		} else if node.TableSpec != nil {
-			buf.astPrintf(node, "%s table %v %v", node.Action, node.Table, node.TableSpec)
+			buf.astPrintf(node, "%s table%s %v %v", node.Action, notExists, node.Table, node.TableSpec)
 		} else {
-			buf.astPrintf(node, "%s table %v", node.Action, node.Table)
+			buf.astPrintf(node, "%s table%s %v", node.Action, notExists, node.Table)
 		}
 	case DropStr:
 		exists := ""
